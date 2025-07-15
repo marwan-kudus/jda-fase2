@@ -22,12 +22,6 @@ export default function Navbar() {
             >
               About
             </Link>
-            <Link
-              href='/Profile'
-              className='text-black hover:text-gray-900 transition-colors'
-            >
-              Profile
-            </Link>
 
             <Link
               href='/contact'

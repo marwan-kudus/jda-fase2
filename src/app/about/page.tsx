@@ -27,7 +27,7 @@ const About: React.FC = () => {
                 Our Story
               </h2>
               <p className='text-gray-600 leading-relaxed mb-4'>
-                Founded in 2020, our web store began with a simple mission: to
+                Founded in 2025, our web store began with a simple mission: to
                 bring high-quality, curated products to customers worldwide.
                 From humble beginnings, we&apos;ve grown into a trusted name,
                 offering a wide range of products that blend style,
@@ -62,17 +62,17 @@ const About: React.FC = () => {
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8'>
             {[
               {
-                name: 'Jane Doe',
+                name: 'Asep',
                 role: 'Founder & CEO',
                 image: '/images/team/jane.jpg',
               },
               {
-                name: 'John Smith',
+                name: 'Ujang',
                 role: 'Head of Design',
                 image: '/images/team/john.jpg',
               },
               {
-                name: 'Emily Brown',
+                name: 'Uci',
                 role: 'Customer Success Lead',
                 image: '/images/team/emily.jpg',
               },

@@ -1,63 +1,142 @@
-// app/product/page.tsx
-import Link from 'next/link';
-import { Product } from './[id]/page';
+'use client';
 
-// Fungsi untuk fetch semua produk
-async function getProducts(): Promise<Product[]> {
-  try {
-    const response = await fetch('https://dummyjson.com/products?limit=10');
-    if (!response.ok) throw new Error('Failed to fetch products');
-    const data = await response.json();
-    return data.products;
-  } catch (error) {
-    console.error('Error fetching products:', error);
-    return [];
-  }
-}
+import { useState, useEffect, useCallback } from 'react';
+import ProductList from '@/app/product/product-list';
+import ProductForm from '@/app/product/product-form';
+import { Product, ProductFormData } from './types';
 
-export default async function ProductPage() {
-  const products = await getProducts();
+// Constants for API endpoints and headers
+const API_URL = '/api/products';
+const JSON_HEADERS = {
+  'Content-Type': 'application/json',
+};
+
+//ProductsPage component manages the product management UI and API interactions.
+
+export default function ProductsPage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+
+  // Fetches products from the API and updates state.
+
+  const fetchProducts = useCallback(async () => {
+    try {
+      const response = await fetch(API_URL);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch products: ${response.status}`);
+      }
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    }
+  }, []);
+
+  // Fetch products on component mount
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  //Creates a new product via API.
+
+  const handleCreate = useCallback(
+    async (product: ProductFormData): Promise<boolean> => {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          headers: JSON_HEADERS,
+          body: JSON.stringify(product),
+        });
+
+        if (response.ok) {
+          await fetchProducts();
+          return true;
+        }
+        throw new Error('Failed to create product');
+      } catch (error) {
+        console.error('Error creating product:', error);
+        return false;
+      }
+    },
+    [fetchProducts]
+  );
+
+  //Updates an existing product via API.
+
+  const handleUpdate = useCallback(
+    async (id: string, product: ProductFormData): Promise<boolean> => {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'PUT',
+          headers: JSON_HEADERS,
+          body: JSON.stringify({ id, ...product }),
+        });
+
+        if (response.ok) {
+          await fetchProducts();
+          setEditingProduct(null); // Clear editing state after successful update
+          return true;
+        }
+        throw new Error('Failed to update product');
+      } catch (error) {
+        console.error('Error updating product:', error);
+        return false;
+      }
+    },
+    [fetchProducts]
+  );
+
+  //Deletes a product via API.
+
+  const handleDelete = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        const response = await fetch(API_URL, {
+          method: 'DELETE',
+          headers: JSON_HEADERS,
+          body: JSON.stringify({ id }),
+        });
+
+        if (response.ok) {
+          await fetchProducts();
+          return true;
+        }
+        throw new Error('Failed to delete product');
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        return false;
+      }
+    },
+    [fetchProducts]
+  );
 
   return (
-    <div className='container mx-auto px-4 py-8'>
-      <h1 className='text-3xl font-bold mb-8'>Our Products</h1>
+    <div className='container mx-auto p-4'>
+      <h1 className='text-2xl font-bold mb-6'>Product Management</h1>
 
-      {products.length === 0 ? (
-        <p className='text-center text-gray-500'>No products found</p>
-      ) : (
-        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-          {products.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.id}`}
-              className='border rounded-lg overflow-hidden hover:shadow-lg transition-shadow'
-            >
-              <div className='bg-gray-100 h-48 flex items-center justify-center p-4'>
-                <div className='w-full h-full bg-white rounded'></div>
-              </div>
-              <div className='p-4'>
-                <h2 className='font-semibold text-lg mb-1 line-clamp-1'>
-                  {product.title}
-                </h2>
-                <p className='text-gray-600 text-sm mb-2 line-clamp-2'>
-                  {product.description}
-                </p>
-                <div className='flex justify-between items-center'>
-                  <span className='font-bold'>${product.price}</span>
-                  <span className='text-sm bg-yellow-100 text-yellow-800 px-2 py-1 rounded'>
-                    {product.rating} ★
-                  </span>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-8'>
+        <section>
+          <h2 className='text-xl font-semibold mb-4'>Add/Edit Product</h2>
+          <ProductForm
+            onSubmit={
+              editingProduct
+                ? (data) => handleUpdate(editingProduct.id, data)
+                : handleCreate
+            }
+            initialData={editingProduct}
+            onCancel={() => setEditingProduct(null)}
+          />
+        </section>
+
+        <section>
+          <h2 className='text-xl font-semibold mb-4'>Product List</h2>
+          <ProductList
+            products={products}
+            onEdit={setEditingProduct}
+            onDelete={handleDelete}
+          />
+        </section>
+      </div>
     </div>
   );
 }
-
-export const metadata = {
-  title: 'All Products | My Store',
-  description: 'Browse our wide selection of products',
-};
