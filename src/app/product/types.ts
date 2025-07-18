@@ -1,7 +1,10 @@
 export interface Product {
-  id: string;
+  id: number;
   name: string;
+  brand: string;
   price: number;
+  description: string | null;
+  stock: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
-
-export type ProductFormData = Omit<Product, 'id'>;
